@@ -24,8 +24,26 @@ def task_list(request):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-def task_detail(request,pk):
-    task = get_object_or_404(Task,pk=pk)
-    serializer = TaskSerializer(task)
-    return Response(serializer.data)
+@api_view(['GET', 'PUT', 'PATCH'])
+def task_detail(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+
+    if request.method == 'GET':
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = TaskSerializer(task, data=request.data)
+
+    elif request.method == 'PATCH':
+        serializer = TaskSerializer(
+            task,
+            data=request.data,
+            partial=True
+        )
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
