@@ -24,7 +24,7 @@ def task_list(request):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'PATCH'])
+@api_view(['GET', 'PUT', 'PATCH','DELETE'])
 def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
 
@@ -41,6 +41,10 @@ def task_detail(request, pk):
             data=request.data,
             partial=True
         )
+
+    elif request.method == 'DELETE':
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     if serializer.is_valid():
         serializer.save()
