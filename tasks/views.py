@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 from .models import Task
@@ -103,6 +105,16 @@ def logout_user(request):
         refresh_token = request.data.get('refresh')
 
         token = RefreshToken(refresh_token)
+
+        token_user_id = token.get(api_settings.USER_ID_CLAIM)
+
+        if str(token_user_id) != str(request.user.pk):
+            return Response(
+                {
+                    'error':'You cannot blacklist another user\'s token.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         token.blacklist()
 
         return Response(
@@ -112,7 +124,7 @@ def logout_user(request):
             status=status.HTTP_205_RESET_CONTENT
         )
 
-    except Exception:
+    except (TokenError,KeyError,TypeError):
         return Response(
             {
                 'error':'Invalid Refresh Token.'
